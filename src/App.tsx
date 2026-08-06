@@ -204,7 +204,7 @@ export default function App() {
             )}
 
             {level.hints.length > 0 && (
-              <details className="border-t border-neutral-800 px-4 py-3 text-sm">
+              <details key={`hints-${level.id}`} className="border-t border-neutral-800 px-4 py-3 text-sm">
                 <summary className="cursor-pointer text-neutral-400">Podpowiedzi</summary>
                 <ul className="mt-2 space-y-1 text-neutral-400 list-disc list-inside">
                   {level.hints.map((h, i) => (
@@ -213,6 +213,13 @@ export default function App() {
                 </ul>
               </details>
             )}
+
+            <details key={`solution-${level.id}`} className="border-t border-neutral-800 px-4 py-3 text-sm">
+              <summary className="cursor-pointer text-neutral-400">Pokaż rozwiązanie</summary>
+              <pre className="mt-2 overflow-x-auto rounded bg-neutral-900 p-3 font-mono text-xs text-neutral-300">
+                {level.solution}
+              </pre>
+            </details>
           </div>
         </div>
       </main>
