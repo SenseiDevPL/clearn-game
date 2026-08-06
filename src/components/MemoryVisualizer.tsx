@@ -15,6 +15,8 @@ interface MemoryVisualizerProps {
   onOutcome: (outcome: 'success' | 'crash') => void
   onRun: () => void
   running: boolean
+  /** Fires on every replay step with currentBytes/limit, for a synced machine animation. */
+  onTick?: (fraction: number) => void
 }
 
 export function MemoryVisualizer({
@@ -24,6 +26,7 @@ export function MemoryVisualizer({
   onOutcome,
   onRun,
   running,
+  onTick,
 }: MemoryVisualizerProps) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [currentBytes, setCurrentBytes] = useState(0)
@@ -66,6 +69,7 @@ export function MemoryVisualizer({
       index += 1
       setCurrentBytes(running)
       setLog((prev) => [...prev, event])
+      onTick?.(Math.min(1, running / level.memoryLimitBytes))
 
       if (running >= level.memoryLimitBytes) {
         clearInterval(timer)

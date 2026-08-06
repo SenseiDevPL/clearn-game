@@ -4,6 +4,8 @@ import { runCpp } from './lib/runCpp'
 import { CodeEditor } from './components/CodeEditor'
 import { MemoryVisualizer } from './components/MemoryVisualizer'
 import { FactoryHall } from './components/FactoryHall'
+import { LevelMachine } from './components/LevelMachine'
+import type { MachineState } from './game/SingleMachineScene'
 import type { HeapEvent } from './lib/heapAllocator'
 
 const PROGRESS_KEY = 'clearn-progress'
@@ -36,6 +38,7 @@ export default function App() {
   const [runState, setRunState] = useState<RunState>({ status: 'idle' })
   const [heapEvents, setHeapEvents] = useState<HeapEvent[] | null>(null)
   const [runToken, setRunToken] = useState(0)
+  const [machineState, setMachineState] = useState<MachineState>({ kind: 'idle' })
   const level = levels[levelIndex]
 
   const [code, setCode] = useState(
@@ -46,6 +49,7 @@ export default function App() {
     setCode(localStorage.getItem(codeKey(level.id)) ?? level.starterCode)
     setRunState({ status: 'idle' })
     setHeapEvents(null)
+    setMachineState({ kind: 'idle' })
   }, [level.id, level.starterCode])
 
   function handleCodeChange(value: string) {
@@ -62,16 +66,19 @@ export default function App() {
 
   async function handleRun() {
     setRunState({ status: 'running' })
+    setMachineState({ kind: 'idle' })
     if (level.kind === 'memory') setHeapEvents(null)
 
     const result = await runCpp(code, { mode: level.kind === 'memory' ? 'memory' : 'output' })
 
     if (result.timedOut) {
       setRunState({ status: 'timeout' })
+      setMachineState({ kind: 'fault' })
       return
     }
     if (result.error) {
       setRunState({ status: 'error', message: result.error })
+      setMachineState({ kind: 'fault' })
       return
     }
 
@@ -86,13 +93,20 @@ export default function App() {
     if (actual === level.expectedOutput) {
       markCompleted()
       setRunState({ status: 'success', output: result.output })
+      setMachineState({ kind: 'success' })
     } else {
       setRunState({ status: 'wrong', output: result.output })
+      setMachineState({ kind: 'fault' })
     }
   }
 
   function handleMemoryOutcome(outcome: 'success' | 'crash') {
     if (outcome === 'success') markCompleted()
+    setMachineState(outcome === 'success' ? { kind: 'success' } : { kind: 'fault' })
+  }
+
+  function handleMemoryTick(fraction: number) {
+    setMachineState({ kind: 'danger', fraction })
   }
 
   return (
@@ -126,6 +140,7 @@ export default function App() {
           </div>
 
           <div className="w-96 shrink-0 flex flex-col">
+            <LevelMachine state={machineState} />
             {(runState.status === 'error' || runState.status === 'timeout') && (
               <div className="px-4 py-3 border-b border-neutral-800 font-mono text-sm">
                 {runState.status === 'error' && (
@@ -149,6 +164,7 @@ export default function App() {
                 events={heapEvents}
                 runToken={runToken}
                 onOutcome={handleMemoryOutcome}
+                onTick={handleMemoryTick}
                 onRun={handleRun}
                 running={runState.status === 'running'}
               />
