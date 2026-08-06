@@ -21,8 +21,8 @@ export class FactoryScene extends Phaser.Scene {
 
   private state: FactoryState = { levels: [], completed: new Set(), selectedIndex: 0 }
   private machines: Phaser.GameObjects.Container[] = []
-  private gauges: Phaser.GameObjects.Arc[] = []
-  private gaugeGlows: Phaser.GameObjects.Arc[] = []
+  private statusEmojis: Phaser.GameObjects.Text[] = []
+  private bigEmojis: Phaser.GameObjects.Text[] = []
   private smokeEmitters: Phaser.GameObjects.Particles.ParticleEmitter[] = []
   private pipes!: Phaser.GameObjects.Graphics
   private ready = false
@@ -66,8 +66,8 @@ export class FactoryScene extends Phaser.Scene {
   private rebuildMachines() {
     this.machines.forEach((c) => c.destroy())
     this.machines = []
-    this.gauges = []
-    this.gaugeGlows = []
+    this.statusEmojis = []
+    this.bigEmojis = []
     this.smokeEmitters.forEach((e) => e.destroy())
     this.smokeEmitters = []
 
@@ -115,14 +115,17 @@ export class FactoryScene extends Phaser.Scene {
       chimney.setStrokeStyle(1, 0x52525b)
       container.add(chimney)
 
-      const gaugeGlow = this.add.circle(MACHINE_WIDTH / 2 - 24, 8 - bodyH / 2 + 19, 13, 0xef4444, 0.25)
-      container.add(gaugeGlow)
-      this.gaugeGlows.push(gaugeGlow)
+      const statusEmoji = this.add
+        .text(MACHINE_WIDTH / 2 - 26, 8 - bodyH / 2 + 19, '🔴', { fontSize: '20px' })
+        .setOrigin(0.5, 0.5)
+      container.add(statusEmoji)
+      this.statusEmojis.push(statusEmoji)
 
-      const gauge = this.add.circle(MACHINE_WIDTH / 2 - 24, 8 - bodyH / 2 + 19, 8, 0xef4444)
-      gauge.setStrokeStyle(2, 0x18181b)
-      container.add(gauge)
-      this.gauges.push(gauge)
+      const bigEmoji = this.add
+        .text(-bodyW / 2 + 34, 8 + 16, '🔧', { fontSize: '30px' })
+        .setOrigin(0.5, 0.5)
+      container.add(bigEmoji)
+      this.bigEmojis.push(bigEmoji)
 
       const numberText = this.add
         .text(-bodyW / 2 + 16, 8 - bodyH / 2 + 11, String(level.id), {
@@ -173,10 +176,8 @@ export class FactoryScene extends Phaser.Scene {
     this.state.levels.forEach((level, i) => {
       const done = this.state.completed.has(level.id)
 
-      const gauge = this.gauges[i]
-      gauge?.setFillStyle(done ? 0x34d399 : 0xef4444)
-      const glow = this.gaugeGlows[i]
-      glow?.setFillStyle(done ? 0x34d399 : 0xef4444, 0.25)
+      this.statusEmojis[i]?.setText(done ? '🟢' : '🔴')
+      this.bigEmojis[i]?.setText(done ? '✅' : '🔧')
 
       const emitter = this.smokeEmitters[i]
       if (emitter) {
