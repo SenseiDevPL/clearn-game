@@ -3,6 +3,7 @@ import { levels } from './levels/levels'
 import { runCpp } from './lib/runCpp'
 import { CodeEditor } from './components/CodeEditor'
 import { MemoryVisualizer } from './components/MemoryVisualizer'
+import { FactoryHall } from './components/FactoryHall'
 import type { HeapEvent } from './lib/heapAllocator'
 
 const PROGRESS_KEY = 'clearn-progress'
@@ -96,26 +97,16 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100">
-      <aside className="w-56 shrink-0 border-r border-neutral-800 overflow-y-auto">
+      <aside className="w-64 shrink-0 border-r border-neutral-800 overflow-y-auto">
         <h1 className="px-4 py-4 text-lg font-semibold text-neutral-100">
           clearn <span className="text-emerald-400">C</span>
         </h1>
-        <nav className="flex flex-col">
-          {levels.map((l, i) => (
-            <button
-              key={l.id}
-              onClick={() => setLevelIndex(i)}
-              className={`text-left px-4 py-2.5 text-sm border-l-2 transition-colors ${
-                i === levelIndex
-                  ? 'border-emerald-400 bg-neutral-900 text-neutral-100'
-                  : 'border-transparent text-neutral-400 hover:bg-neutral-900/50'
-              }`}
-            >
-              <span className="mr-2">{completed.has(l.id) ? '✓' : `${l.id}.`}</span>
-              {l.title}
-            </button>
-          ))}
-        </nav>
+        <FactoryHall
+          levels={levels}
+          completed={completed}
+          selectedIndex={levelIndex}
+          onSelect={setLevelIndex}
+        />
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0">
