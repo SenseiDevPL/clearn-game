@@ -3,6 +3,7 @@ import type { Level } from '../types'
 export const levels: Level[] = [
   {
     id: 1,
+    kind: 'output',
     title: 'Pierwszy program',
     concept: 'printf',
     instructions:
@@ -30,6 +31,7 @@ int main() {
   },
   {
     id: 2,
+    kind: 'output',
     title: 'Zmienne i arytmetyka',
     concept: 'zmienne, int, +',
     instructions:
@@ -61,6 +63,7 @@ int main() {
   },
   {
     id: 3,
+    kind: 'output',
     title: 'Decyzja',
     concept: 'if / else',
     instructions:
@@ -94,6 +97,7 @@ int main() {
   },
   {
     id: 4,
+    kind: 'output',
     title: 'Pętla for',
     concept: 'for',
     instructions:
@@ -127,6 +131,7 @@ int main() {
   },
   {
     id: 5,
+    kind: 'output',
     title: 'Pętla while',
     concept: 'while',
     instructions:
@@ -159,6 +164,7 @@ int main() {
   },
   {
     id: 6,
+    kind: 'output',
     title: 'Wskaźniki',
     concept: 'wskaźniki, &, *',
     instructions:
@@ -188,5 +194,51 @@ int main() {
 }
 `,
     expectedOutput: '99',
+  },
+  {
+    id: 7,
+    kind: 'memory',
+    title: 'Memory Debugger: wyciek pamięci',
+    concept: 'malloc / free',
+    instructions:
+      'Funkcja przetworz_pakiet() rezerwuje pamięć przez malloc(), ale nigdy jej nie zwalnia. Serwer wywołuje ją w pętli — pamięć RAM rośnie z każdym wywołaniem, aż w końcu zabraknie miejsca. Dopisz brakujące free(bufor), żeby zatrzymać wyciek.',
+    starterCode: `#include <stdio.h>
+#include <stdlib.h>
+
+void przetworz_pakiet() {
+    int *bufor = malloc(sizeof(int) * 64);
+    // BUG: brakuje free(bufor) - pamiec nigdy nie jest zwalniana!
+}
+
+int main() {
+    for (int i = 0; i < 12; i++) {
+        przetworz_pakiet();
+    }
+    printf("Przetworzono 12 pakietow.\\n");
+    return 0;
+}
+`,
+    hints: [
+      'Każdy malloc() musi mieć odpowiadający mu free() — inaczej pamięć zostaje zajęta na zawsze.',
+      'Dodaj free(bufor); na końcu funkcji przetworz_pakiet(), zaraz po tym jak bufor przestaje być potrzebny.',
+    ],
+    solution: `#include <stdio.h>
+#include <stdlib.h>
+
+void przetworz_pakiet() {
+    int *bufor = malloc(sizeof(int) * 64);
+    free(bufor);
+}
+
+int main() {
+    for (int i = 0; i < 12; i++) {
+        przetworz_pakiet();
+    }
+    printf("Przetworzono 12 pakietow.\\n");
+    return 0;
+}
+`,
+    memoryLimitBytes: 2048,
+    warningThresholdFraction: 0.6,
   },
 ]
