@@ -10,6 +10,15 @@ import type { HeapEvent } from './lib/heapAllocator'
 
 const PROGRESS_KEY = 'clearn-progress'
 const codeKey = (levelId: number) => `clearn-code-${levelId}`
+const lessonKey = (levelId: number) => `clearn-lesson-${levelId}`
+
+function lessonSeen(levelId: number): boolean {
+  try {
+    return localStorage.getItem(lessonKey(levelId)) === '1'
+  } catch {
+    return false
+  }
+}
 
 function loadProgress(): Set<number> {
   try {
@@ -41,6 +50,7 @@ export default function App() {
   const [machineState, setMachineState] = useState<MachineState>({ kind: 'idle' })
   const [editorKey, setEditorKey] = useState(0)
   const level = levels[levelIndex]
+  const [lessonOpen, setLessonOpen] = useState(() => !lessonSeen(level.id))
 
   const [code, setCode] = useState(
     () => localStorage.getItem(codeKey(level.id)) ?? level.starterCode,
@@ -51,7 +61,25 @@ export default function App() {
     setRunState({ status: 'idle' })
     setHeapEvents(null)
     setMachineState({ kind: 'idle' })
+    setLessonOpen(!lessonSeen(level.id))
   }, [level.id, level.starterCode])
+
+  function closeLesson() {
+    try {
+      localStorage.setItem(lessonKey(level.id), '1')
+    } catch {
+      // ignore — lesson just shows again next time
+    }
+    setLessonOpen(false)
+  }
+
+  function insertSolution() {
+    localStorage.setItem(codeKey(level.id), level.solution)
+    setCode(level.solution)
+    setEditorKey((k) => k + 1)
+    setRunState({ status: 'idle' })
+    setMachineState({ kind: 'idle' })
+  }
 
   function handleCodeChange(value: string) {
     setCode(value)
@@ -146,7 +174,19 @@ export default function App() {
           <div className="text-xs uppercase tracking-wide text-neutral-500">
             Poziom {levelIndex + 1} z {levels.length} · {level.concept}
           </div>
-          <h2 className="mt-1 text-xl font-semibold">{level.title}</h2>
+          <div className="mt-1 flex items-center gap-3">
+            <h2 className="text-xl font-semibold">{level.title}</h2>
+            {!lessonOpen && (
+              <button
+                onClick={() => setLessonOpen(true)}
+                className="rounded-lg border border-sky-600 px-3 py-1 text-sm text-sky-300 hover:bg-sky-950"
+              >
+                📖 Pokaż lekcję jeszcze raz
+              </button>
+            )}
+          </div>
+          {!lessonOpen && (
+          <>
           <div className="mt-3 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3">
             <div className="text-sm font-semibold text-emerald-300">Twoje zadanie</div>
             <p className="mt-1 text-base text-neutral-100">{level.instructions}</p>
@@ -165,8 +205,53 @@ export default function App() {
             <li><b className="text-neutral-200">3.</b> Kliknij zielony przycisk „▶ Uruchom kod”</li>
             <li>Utknąłeś? Na dole po prawej są podpowiedzi i rozwiązanie.</li>
           </ol>
+          </>
+          )}
         </div>
 
+        {lessonOpen ? (
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-3xl px-6 py-8">
+              <div className="text-sm font-semibold uppercase tracking-wide text-sky-300">
+                📖 Lekcja — przeczytaj, zanim zaczniesz
+              </div>
+              <div className="mt-4 space-y-3 text-lg leading-relaxed text-neutral-200">
+                {level.lesson.paragraphs.map((t, i) => (
+                  <p key={i}>
+                    {t.split('`').map((part, j) =>
+                      j % 2 === 1 ? (
+                        <code
+                          key={j}
+                          className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-base text-sky-200"
+                        >
+                          {part}
+                        </code>
+                      ) : (
+                        part
+                      ),
+                    )}
+                  </p>
+                ))}
+              </div>
+              <div className="mt-6 text-sm font-semibold text-neutral-300">Przykład:</div>
+              <pre className="mt-2 overflow-x-auto rounded-lg bg-neutral-900 p-4 font-mono text-base text-sky-200">
+                {level.lesson.example}
+              </pre>
+              <div className="mt-4 text-sm font-semibold text-neutral-300">
+                Na ekranie pojawi się:
+              </div>
+              <pre className="mt-2 overflow-x-auto rounded-lg bg-black p-4 font-mono text-base text-emerald-300">
+                {level.lesson.exampleOutput}
+              </pre>
+              <button
+                onClick={closeLesson}
+                className="mt-8 rounded-lg bg-emerald-500 px-6 py-3 text-base font-semibold text-neutral-950 hover:bg-emerald-400"
+              >
+                Rozumiem — przejdź do zadania →
+              </button>
+            </div>
+          </div>
+        ) : (
         <div className="flex-1 flex min-h-0">
           <div className="flex-1 min-w-0 flex flex-col border-r border-neutral-800">
             <div className="flex-1 min-h-0">
@@ -286,12 +371,20 @@ export default function App() {
 
             <details key={`solution-${level.id}`} className="border-t border-neutral-800 px-4 py-3 text-sm">
               <summary className="cursor-pointer text-neutral-300">🔑 Pokaż rozwiązanie</summary>
-              <pre className="mt-2 overflow-x-auto rounded bg-neutral-900 p-3 font-mono text-xs text-neutral-300">
-                {level.solution}
+              <div className="mt-2 text-neutral-300">{level.solutionWhere}</div>
+              <pre className="mt-2 overflow-x-auto rounded bg-neutral-900 p-3 font-mono text-sm text-emerald-300">
+                {level.solutionSnippet}
               </pre>
+              <button
+                onClick={insertSolution}
+                className="mt-2 rounded-lg border border-emerald-600 px-3 py-1.5 text-sm text-emerald-300 hover:bg-emerald-950"
+              >
+                Wstaw rozwiązanie za mnie
+              </button>
             </details>
           </div>
         </div>
+        )}
       </main>
     </div>
   )

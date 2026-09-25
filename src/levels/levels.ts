@@ -3,6 +3,19 @@ import type { Level } from '../types'
 export const levels: Level[] = [
   {
     id: 1,
+    lesson: {
+      paragraphs: [
+        'Program w C to przepis, który komputer wykonuje linijka po linijce, od góry do dołu.',
+        'Wszystko, co ma się wykonać, piszesz w środku `main() { ... }` — to „start” programu. Linijek `#include` i `return 0;` nie ruszasz, to stała obudowa.',
+        '`printf(...)` to polecenie „wypisz na ekran”. Tekst do wypisania wkładasz w cudzysłów `" "`.',
+        '`\\n` na końcu tekstu znaczy „przejdź do nowej linii” — jak naciśnięcie Enter.',
+        'Każde polecenie kończysz średnikiem `;` — jak kropką na końcu zdania. Bez niego komputer nie zrozumie.',
+      ],
+      example: `printf("Dzien dobry!\\n");`,
+      exampleOutput: `Dzien dobry!`,
+    },
+    solutionWhere: 'Pod linijką // Twój kod tutaj wpisz:',
+    solutionSnippet: `printf("Witaj w jezyku C!\\n");`,
     kind: 'output',
     title: 'Pierwszy program',
     concept: 'printf',
@@ -31,6 +44,18 @@ int main() {
   },
   {
     id: 2,
+    lesson: {
+      paragraphs: [
+        'Zmienna to pudełko z nazwą, w którym trzymasz liczbę.',
+        '`int x = 5;` znaczy: zrób pudełko o nazwie x na liczbę całkowitą (int) i włóż do niego 5.',
+        'Na liczbach możesz liczyć: `+` dodawanie, `-` odejmowanie, `*` mnożenie, `/` dzielenie.',
+        'Żeby wypisać liczbę, w tekście printf wstawiasz znaczek `%d` — to puste miejsce, w które komputer wstawi liczbę podaną po przecinku.',
+      ],
+      example: `int x = 5;\nint y = 3;\nprintf("%d\\n", x * y);`,
+      exampleOutput: `15`,
+    },
+    solutionWhere: 'Pod linijką // Wypisz sumę a + b wpisz:',
+    solutionSnippet: `printf("%d\\n", a + b);`,
     kind: 'output',
     title: 'Zmienne i arytmetyka',
     concept: 'zmienne, int, +',
@@ -63,6 +88,17 @@ int main() {
   },
   {
     id: 3,
+    lesson: {
+      paragraphs: [
+        '`if` znaczy „jeśli”. Komputer sprawdza warunek w nawiasie `( )` i wykonuje kod w klamrach `{ }` tylko wtedy, gdy warunek jest prawdziwy.',
+        '`else` znaczy „w przeciwnym razie” — ten kod wykona się, gdy warunek jest fałszywy.',
+        'Porównania: `>` większe, `<` mniejsze, `>=` większe lub równe, `<=` mniejsze lub równe, `==` równe (dwa znaki =).',
+      ],
+      example: `int temperatura = 25;\nif (temperatura > 20) {\n    printf("cieplo\\n");\n} else {\n    printf("zimno\\n");\n}`,
+      exampleOutput: `cieplo`,
+    },
+    solutionWhere: 'Pod linijką // Twój kod if/else tutaj wpisz:',
+    solutionSnippet: `if (wiek >= 18) {\n    printf("pelnoletni\\n");\n} else {\n    printf("niepelnoletni\\n");\n}`,
     kind: 'output',
     title: 'Decyzja',
     concept: 'if / else',
@@ -97,6 +133,18 @@ int main() {
   },
   {
     id: 4,
+    lesson: {
+      paragraphs: [
+        'Pętla to powtarzanie tego samego kawałka kodu wiele razy — jak robienie pompek: raz, dwa, trzy…',
+        '`for (int i = 1; i <= 3; i++)` czytasz tak: zacznij od i = 1; powtarzaj, dopóki i jest mniejsze lub równe 3; po każdym razie zwiększ i o 1 (`i++`).',
+        'Kod w klamrach `{ }` wykona się przy każdym powtórzeniu.',
+        '`suma += i;` znaczy: dodaj i do tego, co już jest w sumie.',
+      ],
+      example: `for (int i = 1; i <= 3; i++) {\n    printf("%d\\n", i);\n}`,
+      exampleOutput: `1\n2\n3`,
+    },
+    solutionWhere: 'Pod linijką // Pętla for tutaj wpisz:',
+    solutionSnippet: `for (int i = 1; i <= 5; i++) {\n    suma += i;\n}`,
     kind: 'output',
     title: 'Pętla for',
     concept: 'for',
@@ -131,6 +179,17 @@ int main() {
   },
   {
     id: 5,
+    lesson: {
+      paragraphs: [
+        '`while` znaczy „dopóki”: powtarzaj kod w klamrach `{ }` tak długo, jak warunek jest prawdziwy.',
+        'W środku pętli trzeba coś zmieniać, inaczej warunek zawsze będzie prawdziwy i pętla nigdy się nie skończy (gra przerwie ją po 4 sekundach).',
+        '`n++` zwiększa liczbę o 1, `n--` zmniejsza o 1.',
+      ],
+      example: `int n = 1;\nwhile (n <= 3) {\n    printf("%d\\n", n);\n    n++;\n}`,
+      exampleOutput: `1\n2\n3`,
+    },
+    solutionWhere: 'Pod linijką // Pętla while tutaj wpisz:',
+    solutionSnippet: `while (paliwo > 0) {\n    printf("%d\\n", paliwo);\n    paliwo--;\n}`,
     kind: 'output',
     title: 'Pętla while',
     concept: 'while',
@@ -164,6 +223,18 @@ int main() {
   },
   {
     id: 6,
+    lesson: {
+      paragraphs: [
+        'Każda zmienna mieszka w pamięci komputera pod jakimś adresem — jak dom przy ulicy.',
+        '`&a` znaczy „adres zmiennej a”.',
+        '`int *w = &a;` tworzy wskaźnik w — karteczkę, na której zapisany jest adres a.',
+        '`*w` znaczy „to, co mieszka pod tym adresem”. Więc `*w = 7;` zmienia wartość a, choć nigdzie nie piszesz a.',
+      ],
+      example: `int a = 1;\nint *w = &a;\n*w = 7;\nprintf("%d\\n", a);`,
+      exampleOutput: `7`,
+    },
+    solutionWhere: 'Pod linijką // Zadeklaruj wskaźnik p... wpisz:',
+    solutionSnippet: `int *p = &x;\n*p = 99;`,
     kind: 'output',
     title: 'Wskaźniki',
     concept: 'wskaźniki, &, *',
@@ -197,6 +268,18 @@ int main() {
   },
   {
     id: 7,
+    lesson: {
+      paragraphs: [
+        '`malloc()` to wypożyczenie kawałka pamięci od komputera — jak wypożyczenie skrzynki w magazynie.',
+        '`free()` to oddanie tej skrzynki. Kto wypożycza i nie oddaje, w końcu opróżni cały magazyn.',
+        'To właśnie wyciek pamięci: program działa, ale za każdym razem zabiera trochę więcej, aż pamięć się skończy i program pada.',
+        'Zasada: każdy `malloc()` musi mieć swój `free()`, kiedy pamięć nie jest już potrzebna.',
+      ],
+      example: `int *dane = malloc(sizeof(int) * 10);\n// ... tu używasz dane ...\nfree(dane);`,
+      exampleOutput: `(nic nie wypisuje — ale pamięć wraca do komputera)`,
+    },
+    solutionWhere: 'Zamień linijkę // BUG: brakuje free(bufor)... na:',
+    solutionSnippet: `free(bufor);`,
     kind: 'memory',
     title: 'Memory Debugger: wyciek pamięci',
     concept: 'malloc / free',
