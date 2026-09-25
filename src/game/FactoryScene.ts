@@ -128,7 +128,7 @@ export class FactoryScene extends Phaser.Scene {
       this.bigEmojis.push(bigEmoji)
 
       const numberText = this.add
-        .text(-bodyW / 2 + 16, 8 - bodyH / 2 + 11, String(level.id), {
+        .text(-bodyW / 2 + 16, 8 - bodyH / 2 + 11, String(i + 1), {
           fontFamily: 'ui-monospace, monospace',
           fontSize: '13px',
           color: '#a1a1aa',
