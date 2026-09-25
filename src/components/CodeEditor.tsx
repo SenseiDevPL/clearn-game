@@ -1,16 +1,17 @@
 import Editor from '@monaco-editor/react'
 
 interface CodeEditorProps {
-  value: string
+  /** Only read on mount — remount (change `key`) to load different code. */
+  initialValue: string
   onChange: (value: string) => void
 }
 
-export function CodeEditor({ value, onChange }: CodeEditorProps) {
+export function CodeEditor({ initialValue, onChange }: CodeEditorProps) {
   return (
     <Editor
       height="100%"
       defaultLanguage="cpp"
-      value={value}
+      defaultValue={initialValue}
       onChange={(v) => onChange(v ?? '')}
       theme="vs-dark"
       options={{
@@ -19,6 +20,24 @@ export function CodeEditor({ value, onChange }: CodeEditorProps) {
         scrollBeyondLastLine: false,
         automaticLayout: true,
         tabSize: 4,
+        // Beginners type every character themselves: no popups, no
+        // auto-inserted quotes/brackets, Enter always means a new line.
+        quickSuggestions: false,
+        suggestOnTriggerCharacters: false,
+        acceptSuggestionOnEnter: 'off',
+        acceptSuggestionOnCommitCharacter: false,
+        tabCompletion: 'off',
+        wordBasedSuggestions: 'off',
+        parameterHints: { enabled: false },
+        snippetSuggestions: 'none',
+        inlineSuggest: { enabled: false },
+        autoClosingBrackets: 'never',
+        autoClosingQuotes: 'never',
+        autoClosingOvertype: 'never',
+        autoSurround: 'never',
+        formatOnType: false,
+        hover: { enabled: 'off' },
+        contextmenu: false,
       }}
     />
   )

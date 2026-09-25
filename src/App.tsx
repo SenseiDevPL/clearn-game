@@ -39,6 +39,7 @@ export default function App() {
   const [heapEvents, setHeapEvents] = useState<HeapEvent[] | null>(null)
   const [runToken, setRunToken] = useState(0)
   const [machineState, setMachineState] = useState<MachineState>({ kind: 'idle' })
+  const [editorKey, setEditorKey] = useState(0)
   const level = levels[levelIndex]
 
   const [code, setCode] = useState(
@@ -109,12 +110,29 @@ export default function App() {
     setMachineState({ kind: 'danger', fraction })
   }
 
+  function handleReset() {
+    if (!window.confirm('Przywrócić kod początkowy tego poziomu? Twoje zmiany znikną.')) return
+    localStorage.removeItem(codeKey(level.id))
+    setCode(level.starterCode)
+    setEditorKey((k) => k + 1)
+    setRunState({ status: 'idle' })
+    setHeapEvents(null)
+    setMachineState({ kind: 'idle' })
+  }
+
+  const isDone = completed.has(level.id)
+  const hasNext = levelIndex < levels.length - 1
+  const running = runState.status === 'running'
+
   return (
     <div className="flex h-screen bg-neutral-950 text-neutral-100">
       <aside className="w-64 shrink-0 border-r border-neutral-800 overflow-y-auto">
-        <h1 className="px-4 py-4 text-lg font-semibold text-neutral-100">
+        <h1 className="px-4 pt-4 text-lg font-semibold text-neutral-100">
           clearn <span className="text-emerald-400">C</span>
         </h1>
+        <p className="px-4 pb-3 pt-1 text-sm text-neutral-400">
+          Wybierz maszynę do naprawy (poziom). Ukończone: {completed.size} z {levels.length}
+        </p>
         <FactoryHall
           levels={levels}
           completed={completed}
@@ -125,35 +143,86 @@ export default function App() {
 
       <main className="flex-1 flex flex-col min-w-0">
         <div className="border-b border-neutral-800 px-6 py-4">
-          <div className="flex items-baseline gap-3">
-            <h2 className="text-base font-semibold">{level.title}</h2>
-            <span className="text-xs uppercase tracking-wide text-neutral-500">
-              {level.concept}
-            </span>
+          <div className="text-xs uppercase tracking-wide text-neutral-500">
+            Poziom {levelIndex + 1} z {levels.length} · {level.concept}
           </div>
-          <p className="mt-1 text-sm text-neutral-400">{level.instructions}</p>
+          <h2 className="mt-1 text-xl font-semibold">{level.title}</h2>
+          <div className="mt-3 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3">
+            <div className="text-sm font-semibold text-emerald-300">Twoje zadanie</div>
+            <p className="mt-1 text-base text-neutral-100">{level.instructions}</p>
+            {level.kind === 'output' && (
+              <div className="mt-2 text-sm text-neutral-300">
+                Program ma wypisać:{' '}
+                <code className="whitespace-pre rounded bg-neutral-900 px-2 py-0.5 font-mono text-emerald-300">
+                  {level.expectedOutput.replaceAll('\n', ' ⏎ ')}
+                </code>
+              </div>
+            )}
+          </div>
+          <ol className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-neutral-400">
+            <li><b className="text-neutral-200">1.</b> Przeczytaj zadanie</li>
+            <li><b className="text-neutral-200">2.</b> Kliknij w kod poniżej i dopisz swój kod w miejscu „Twój kod tutaj”</li>
+            <li><b className="text-neutral-200">3.</b> Kliknij zielony przycisk „▶ Uruchom kod”</li>
+            <li>Utknąłeś? Na dole po prawej są podpowiedzi i rozwiązanie.</li>
+          </ol>
         </div>
 
         <div className="flex-1 flex min-h-0">
-          <div className="flex-1 min-w-0 border-r border-neutral-800">
-            <CodeEditor value={code} onChange={handleCodeChange} />
+          <div className="flex-1 min-w-0 flex flex-col border-r border-neutral-800">
+            <div className="flex-1 min-h-0">
+              <CodeEditor
+                key={`${level.id}-${editorKey}`}
+                initialValue={localStorage.getItem(codeKey(level.id)) ?? level.starterCode}
+                onChange={handleCodeChange}
+              />
+            </div>
+            <div className="flex items-center gap-3 border-t border-neutral-800 px-4 py-3">
+              <button
+                onClick={handleRun}
+                disabled={running}
+                className="rounded-lg bg-emerald-500 px-6 py-3 text-base font-semibold text-neutral-950 hover:bg-emerald-400 disabled:opacity-50"
+              >
+                {running ? 'Uruchamiam…' : '▶ Uruchom kod'}
+              </button>
+              {isDone && hasNext && (
+                <button
+                  onClick={() => setLevelIndex(levelIndex + 1)}
+                  className="rounded-lg border border-emerald-500 px-5 py-3 text-base font-semibold text-emerald-300 hover:bg-emerald-950"
+                >
+                  Następny poziom →
+                </button>
+              )}
+              <button
+                onClick={handleReset}
+                className="ml-auto rounded-lg px-3 py-2 text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+              >
+                ↺ Zacznij poziom od nowa
+              </button>
+            </div>
           </div>
 
           <div className="w-96 shrink-0 flex flex-col">
             <LevelMachine state={machineState} />
             {(runState.status === 'error' || runState.status === 'timeout') && (
-              <div className="px-4 py-3 border-b border-neutral-800 font-mono text-sm">
+              <div className="px-4 py-3 border-b border-neutral-800 text-sm">
                 {runState.status === 'error' && (
                   <>
-                    <div className="mb-1 text-red-400 font-sans font-medium">
-                      Błąd kompilacji/wykonania
+                    <div className="mb-1 text-red-400 font-medium">
+                      Komputer nie rozumie tego kodu
                     </div>
-                    <div className="text-red-300">{runState.message}</div>
+                    <div className="text-neutral-300">
+                      Sprawdź średniki <code>;</code> na końcu linii, cudzysłowy <code>"</code> i
+                      nawiasy — każdy otwarty musi być zamknięty.
+                    </div>
+                    <div className="mt-2 font-mono text-xs text-red-300/80">
+                      Szczegóły: {runState.message}
+                    </div>
                   </>
                 )}
                 {runState.status === 'timeout' && (
                   <div className="text-red-400">
-                    Przekroczono limit czasu — prawdopodobnie nieskończona pętla.
+                    Program działał za długo i został zatrzymany — prawdopodobnie pętla, która
+                    nigdy się nie kończy.
                   </div>
                 )}
               </div>
@@ -165,32 +234,26 @@ export default function App() {
                 runToken={runToken}
                 onOutcome={handleMemoryOutcome}
                 onTick={handleMemoryTick}
-                onRun={handleRun}
-                running={runState.status === 'running'}
               />
             ) : (
               <div className="flex-1 flex flex-col min-h-0">
-                <div className="px-4 py-3 border-b border-neutral-800 flex items-center justify-between">
-                  <span className="text-sm font-medium text-neutral-300">Konsola</span>
-                  <button
-                    onClick={handleRun}
-                    disabled={runState.status === 'running'}
-                    className="rounded bg-emerald-500 px-3 py-1.5 text-sm font-medium text-neutral-950 hover:bg-emerald-400 disabled:opacity-50"
-                  >
-                    {runState.status === 'running' ? 'Uruchamiam…' : 'Uruchom'}
-                  </button>
+                <div className="px-4 py-3 border-b border-neutral-800">
+                  <span className="text-sm font-medium text-neutral-300">
+                    Wynik programu
+                  </span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 font-mono text-sm whitespace-pre-wrap">
                   {runState.status === 'idle' && (
-                    <span className="text-neutral-600">
-                      Kliknij "Uruchom", żeby zobaczyć wynik.
+                    <span className="font-sans text-neutral-500">
+                      Tu pojawi się to, co wypisze Twój program, po kliknięciu „▶ Uruchom kod”.
                     </span>
                   )}
                   {runState.status === 'success' && (
                     <>
                       <div className="mb-2 text-emerald-400 font-sans font-medium">
-                        ✓ Poziom ukończony!
+                        ✓ Brawo, maszyna naprawiona!
+                        {hasNext && ' Kliknij „Następny poziom →”.'}
                       </div>
                       <div className="text-neutral-300">{runState.output}</div>
                     </>
@@ -198,12 +261,12 @@ export default function App() {
                   {runState.status === 'wrong' && (
                     <>
                       <div className="mb-2 text-amber-400 font-sans font-medium">
-                        Jeszcze nie to — sprawdź wynik.
+                        Program działa, ale wypisał co innego niż trzeba.
                       </div>
-                      <div className="text-neutral-400 mb-2">Twój output:</div>
-                      <div className="text-neutral-300 mb-3">{runState.output || '(brak)'}</div>
-                      <div className="text-neutral-400 mb-2">Oczekiwany:</div>
-                      <div className="text-neutral-300">{level.expectedOutput}</div>
+                      <div className="text-neutral-400 mb-2 font-sans">Twój program wypisał:</div>
+                      <div className="text-neutral-300 mb-3">{runState.output || '(nic)'}</div>
+                      <div className="text-neutral-400 mb-2 font-sans">A powinien:</div>
+                      <div className="text-emerald-300">{level.expectedOutput}</div>
                     </>
                   )}
                 </div>
@@ -212,7 +275,7 @@ export default function App() {
 
             {level.hints.length > 0 && (
               <details key={`hints-${level.id}`} className="border-t border-neutral-800 px-4 py-3 text-sm">
-                <summary className="cursor-pointer text-neutral-400">Podpowiedzi</summary>
+                <summary className="cursor-pointer text-neutral-300">💡 Podpowiedzi</summary>
                 <ul className="mt-2 space-y-1 text-neutral-400 list-disc list-inside">
                   {level.hints.map((h, i) => (
                     <li key={i}>{h}</li>
@@ -222,7 +285,7 @@ export default function App() {
             )}
 
             <details key={`solution-${level.id}`} className="border-t border-neutral-800 px-4 py-3 text-sm">
-              <summary className="cursor-pointer text-neutral-400">Pokaż rozwiązanie</summary>
+              <summary className="cursor-pointer text-neutral-300">🔑 Pokaż rozwiązanie</summary>
               <pre className="mt-2 overflow-x-auto rounded bg-neutral-900 p-3 font-mono text-xs text-neutral-300">
                 {level.solution}
               </pre>

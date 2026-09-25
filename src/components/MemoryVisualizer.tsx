@@ -13,8 +13,6 @@ interface MemoryVisualizerProps {
   /** Bump on every run so a re-run with an identical event list still replays. */
   runToken: number
   onOutcome: (outcome: 'success' | 'crash') => void
-  onRun: () => void
-  running: boolean
   /** Fires on every replay step with currentBytes/limit, for a synced machine animation. */
   onTick?: (fraction: number) => void
 }
@@ -24,8 +22,6 @@ export function MemoryVisualizer({
   events,
   runToken,
   onOutcome,
-  onRun,
-  running,
   onTick,
 }: MemoryVisualizerProps) {
   const [phase, setPhase] = useState<Phase>('idle')
@@ -103,13 +99,6 @@ export function MemoryVisualizer({
       <div className="px-4 py-3 border-b border-neutral-800">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-neutral-300">Wizualizacja RAM</span>
-          <button
-            onClick={onRun}
-            disabled={running}
-            className="rounded bg-emerald-500 px-3 py-1.5 text-sm font-medium text-neutral-950 hover:bg-emerald-400 disabled:opacity-50"
-          >
-            {running ? 'Uruchamiam…' : 'Uruchom'}
-          </button>
         </div>
         <div className="mt-2 flex items-baseline justify-between">
           <span className="font-mono text-xs text-neutral-400">
@@ -129,7 +118,7 @@ export function MemoryVisualizer({
       <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
         {phase === 'idle' && (
           <span className="text-neutral-600 font-sans">
-            Kliknij "Uruchom", żeby zobaczyć zużycie pamięci na żywo.
+            Kliknij zielony przycisk „▶ Uruchom kod” pod edytorem, żeby zobaczyć zużycie pamięci na żywo.
           </span>
         )}
 
