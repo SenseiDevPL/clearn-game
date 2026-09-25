@@ -8,6 +8,7 @@ interface CodeEditorProps {
 
 export function CodeEditor({ initialValue, onChange }: CodeEditorProps) {
   return (
+    <div translate="no" className="notranslate h-full">
     <Editor
       height="100%"
       defaultLanguage="cpp"
@@ -40,5 +41,6 @@ export function CodeEditor({ initialValue, onChange }: CodeEditorProps) {
         contextmenu: false,
       }}
     />
+    </div>
   )
 }
