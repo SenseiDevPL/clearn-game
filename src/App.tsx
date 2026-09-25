@@ -158,6 +158,18 @@ export default function App() {
     setMachineState({ kind: 'idle' })
   }
 
+  function handleResetAll() {
+    if (!window.confirm('Zacząć całą grę od nowa? Znikną wszystkie ukończone poziomy i Twój kod.')) return
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('clearn-')) localStorage.removeItem(k)
+      }
+    } catch {
+      // storage blocked — nothing saved anyway
+    }
+    window.location.reload()
+  }
+
   const isDone = completed.has(level.id)
   const hasNext = levelIndex < levels.length - 1
   const running = runState.status === 'running'
@@ -177,6 +189,14 @@ export default function App() {
           selectedIndex={levelIndex}
           onSelect={setLevelIndex}
         />
+        <div className="px-4 py-4">
+          <button
+            onClick={handleResetAll}
+            className="w-full rounded-lg border border-neutral-700 px-3 py-2 text-sm text-neutral-400 hover:border-red-500 hover:text-red-300"
+          >
+            ↺ Zacznij całą grę od nowa
+          </button>
+        </div>
       </aside>
 
       <main className="flex-1 flex flex-col min-w-0">
