@@ -28,6 +28,7 @@ export function MemoryVisualizer({
   const [currentBytes, setCurrentBytes] = useState(0)
   const [log, setLog] = useState<HeapEvent[]>([])
   const [noAllocations, setNoAllocations] = useState(false)
+  const [doubleFree, setDoubleFree] = useState(false)
 
   useEffect(() => {
     if (events === null) {
@@ -35,6 +36,7 @@ export function MemoryVisualizer({
       setCurrentBytes(0)
       setLog([])
       setNoAllocations(false)
+      setDoubleFree(false)
       return
     }
 
@@ -45,6 +47,7 @@ export function MemoryVisualizer({
     setCurrentBytes(0)
     setLog([])
     setNoAllocations(false)
+    setDoubleFree(false)
 
     const finish = (finalPhase: 'success' | 'crashed') => {
       if (cancelled) return
@@ -65,6 +68,13 @@ export function MemoryVisualizer({
       index += 1
       setCurrentBytes(running)
       setLog((prev) => [...prev, event])
+
+      if (event.type === 'doublefree') {
+        clearInterval(timer)
+        setDoubleFree(true)
+        finish('crashed')
+        return
+      }
       onTick?.(Math.min(1, running / level.memoryLimitBytes))
 
       if (running >= level.memoryLimitBytes) {
@@ -123,8 +133,21 @@ export function MemoryVisualizer({
         )}
 
         {log.map((event, i) => (
-          <div key={i} className={event.type === 'alloc' ? 'text-amber-300' : 'text-emerald-400'}>
-            {event.type === 'alloc' ? `malloc() +${event.bytes} B` : `free()   -${event.bytes} B`}
+          <div
+            key={i}
+            className={
+              event.type === 'alloc'
+                ? 'text-amber-300'
+                : event.type === 'free'
+                  ? 'text-emerald-400'
+                  : 'font-bold text-red-400'
+            }
+          >
+            {event.type === 'alloc'
+              ? `malloc() +${event.bytes} B`
+              : event.type === 'free'
+                ? `free()   -${event.bytes} B`
+                : 'free()   ✖ TEN BLOK JUŻ ZWOLNIONY!'}
           </div>
         ))}
 
@@ -136,9 +159,15 @@ export function MemoryVisualizer({
 
         {phase === 'crashed' && (
           <div className="mt-3 font-sans">
-            <div className="font-bold text-red-400">CRASH: Segmentation fault (core dumped)</div>
+            <div className="font-bold text-red-400">
+              {doubleFree
+                ? 'CRASH: double free detected (core dumped)'
+                : 'CRASH: Segmentation fault (core dumped)'}
+            </div>
             <div className="mt-1 text-red-300">
-              {noAllocations
+              {doubleFree
+                ? 'Ta sama pamięć została oddana dwa razy — jak dwa razy zwrócić tę samą skrzynkę do magazynu. Zostaw tylko jedno free().'
+                : noAllocations
                 ? 'Nie wykryto żadnej alokacji — sprawdź, czy przetworz_pakiet() nadal wywołuje malloc().'
                 : 'Pamięć nie została zwolniona — spróbuj ponownie.'}
             </div>

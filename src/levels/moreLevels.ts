@@ -408,4 +408,281 @@ int main() {
 `,
     expectedOutput: '42',
   },
+  {
+    id: 16,
+    kind: 'output',
+    title: 'Największa część',
+    concept: 'szukanie maksimum',
+    lesson: {
+      paragraphs: [
+        'Jak znaleźć największą liczbę w tablicy? Tak jak człowiek: bierzesz pierwszą i zapamiętujesz ją jako „najlepszą do tej pory”.',
+        'Potem przeglądasz resztę po kolei. Jeśli trafisz na większą — zapamiętujesz ją zamiast starej.',
+        'Na końcu w pamięci zostaje ta największa. `if (t[i] > m) { m = t[i]; }` to właśnie „jeśli ta jest większa, zapamiętaj ją”.',
+      ],
+      example: `int t[4] = {2, 8, 5, 1};
+int m = t[0];
+for (int i = 1; i < 4; i++) {
+    if (t[i] > m) {
+        m = t[i];
+    }
+}
+printf("%d\\n", m);`,
+      exampleOutput: `8`,
+    },
+    solutionWhere: 'Pod linijką // Pętla szukająca największej wpisz:',
+    solutionSnippet: `for (int i = 1; i < 5; i++) {
+    if (czesci[i] > najwieksza) {
+        najwieksza = czesci[i];
+    }
+}`,
+    instructions:
+      'Na półkach leżą części o wadze 3, 7, 1, 9, 4. Znajdź pętlą najcięższą i wypisz jej wagę.',
+    starterCode: `#include <stdio.h>
+
+int main() {
+    int czesci[5] = {3, 7, 1, 9, 4};
+    int najwieksza = czesci[0];
+    // Pętla szukająca największej
+
+    printf("%d\\n", najwieksza);
+    return 0;
+}
+`,
+    hints: ['Zacznij pętlę od i = 1 (pierwszą już zapamiętałeś).', 'if (czesci[i] > najwieksza) { najwieksza = czesci[i]; }'],
+    solution: `#include <stdio.h>
+
+int main() {
+    int czesci[5] = {3, 7, 1, 9, 4};
+    int najwieksza = czesci[0];
+    for (int i = 1; i < 5; i++) {
+        if (czesci[i] > najwieksza) {
+            najwieksza = czesci[i];
+        }
+    }
+    printf("%d\\n", najwieksza);
+    return 0;
+}
+`,
+    expectedOutput: '9',
+  },
+  {
+    id: 17,
+    kind: 'output',
+    title: 'Panel świetlny',
+    concept: 'pętla w pętli',
+    lesson: {
+      paragraphs: [
+        'Pętla może być w środku innej pętli. Jak zegar: wskazówka minutowa robi pełne kółko, zanim godzinowa przesunie się o jeden.',
+        'Zewnętrzna pętla liczy wiersze. Wewnętrzna — ile znaków w jednym wierszu.',
+        '`printf("*");` bez `\\n` stawia gwiazdkę i zostaje w tej samej linii. Dopiero `printf("\\n");` przechodzi do następnej.',
+      ],
+      example: `for (int w = 0; w < 2; w++) {
+    for (int k = 0; k < 3; k++) {
+        printf("#");
+    }
+    printf("\\n");
+}`,
+      exampleOutput: `###
+###`,
+    },
+    solutionWhere: 'W środku zewnętrznej pętli, pod linijką // Twój kod tutaj, wpisz:',
+    solutionSnippet: `for (int k = 0; k < 4; k++) {
+    printf("*");
+}
+printf("\\n");`,
+    instructions:
+      'Zapal panel świetlny: 3 wiersze, w każdym 4 gwiazdki (****). Zewnętrzna pętla już liczy wiersze — dopisz w środku rysowanie jednego wiersza.',
+    starterCode: `#include <stdio.h>
+
+int main() {
+    for (int w = 0; w < 3; w++) {
+        // Twój kod tutaj
+    }
+    return 0;
+}
+`,
+    hints: ['Wewnętrzna pętla: for (int k = 0; k < 4; k++) { printf("*"); }', 'Po wewnętrznej pętli: printf("\\n"); żeby zacząć nowy wiersz.'],
+    solution: `#include <stdio.h>
+
+int main() {
+    for (int w = 0; w < 3; w++) {
+        for (int k = 0; k < 4; k++) {
+            printf("*");
+        }
+        printf("\\n");
+    }
+    return 0;
+}
+`,
+    expectedOutput: '****\n****\n****',
+  },
+  {
+    id: 18,
+    kind: 'output',
+    title: 'Licznik obrotów',
+    concept: 'funkcja z pętlą',
+    lesson: {
+      paragraphs: [
+        'W funkcji możesz używać wszystkiego, co już znasz: zmiennych, pętli, warunków.',
+        'Silnia liczby to mnożenie wszystkich liczb od 1 do niej. Silnia z 4 to 1 · 2 · 3 · 4 = 24.',
+        'Sposób: zacznij od wyniku 1 i w pętli mnóż go przez kolejne liczby. `w *= i;` znaczy „pomnóż w przez i”.',
+      ],
+      example: `int suma_do(int n) {
+    int w = 0;
+    for (int i = 1; i <= n; i++) {
+        w += i;
+    }
+    return w;
+}
+// suma_do(4) daje 1 + 2 + 3 + 4
+printf("%d\\n", suma_do(4));`,
+      exampleOutput: `10`,
+    },
+    solutionWhere: 'W funkcji silnia, pod linijką // Twój kod tutaj, wpisz:',
+    solutionSnippet: `int w = 1;
+for (int i = 2; i <= n; i++) {
+    w *= i;
+}
+return w;`,
+    instructions:
+      'Dokończ funkcję silnia: ma oddać iloczyn liczb od 1 do n. main() wypisze silnia(5), czyli powinno wyjść 120.',
+    starterCode: `#include <stdio.h>
+
+int silnia(int n) {
+    // Twój kod tutaj
+}
+
+int main() {
+    printf("%d\\n", silnia(5));
+    return 0;
+}
+`,
+    hints: ['Zacznij od int w = 1; (nie od zera — mnożenie przez 0 daje zawsze 0).', 'Pętla od 2 do n, w środku w *= i; a na końcu return w;'],
+    solution: `#include <stdio.h>
+
+int silnia(int n) {
+    int w = 1;
+    for (int i = 2; i <= n; i++) {
+        w *= i;
+    }
+    return w;
+}
+
+int main() {
+    printf("%d\\n", silnia(5));
+    return 0;
+}
+`,
+    expectedOutput: '120',
+  },
+  {
+    id: 19,
+    kind: 'output',
+    title: 'Lustrzany wyświetlacz',
+    concept: 'napis od tyłu',
+    lesson: {
+      paragraphs: [
+        'Pętla nie musi iść w górę. `for (int i = 4; i >= 0; i--)` idzie w dół: 4, 3, 2, 1, 0.',
+        'Napis "Robot" ma litery w szufladach 0–4: R=0, o=1, b=2, o=3, t=4.',
+        'Jeśli przejdziesz szuflady od 4 do 0 i wypiszesz każdą literę przez `%c`, dostaniesz napis od tyłu.',
+      ],
+      example: `char s[] = "Kot";
+for (int i = 2; i >= 0; i--) {
+    printf("%c", s[i]);
+}
+printf("\\n");`,
+      exampleOutput: `toK`,
+    },
+    solutionWhere: 'Pod linijką // Pętla od tyłu tutaj wpisz:',
+    solutionSnippet: `for (int i = 4; i >= 0; i--) {
+    printf("%c", nazwa[i]);
+}`,
+    instructions:
+      'Wyświetlacz maszyny jest odwrócony. Wypisz napis "Robot" od tyłu — litera po literze, bez spacji.',
+    starterCode: `#include <stdio.h>
+
+int main() {
+    char nazwa[] = "Robot";
+    // Pętla od tyłu tutaj
+
+    printf("\\n");
+    return 0;
+}
+`,
+    hints: ['Ostatnia litera to nazwa[4], pierwsza to nazwa[0].', 'for (int i = 4; i >= 0; i--) { printf("%c", nazwa[i]); }'],
+    solution: `#include <stdio.h>
+
+int main() {
+    char nazwa[] = "Robot";
+    for (int i = 4; i >= 0; i--) {
+        printf("%c", nazwa[i]);
+    }
+    printf("\\n");
+    return 0;
+}
+`,
+    expectedOutput: 'toboR',
+  },
+  {
+    id: 20,
+    kind: 'memory',
+    title: 'Memory Debugger: podwójne zwolnienie',
+    concept: 'double free',
+    lesson: {
+      paragraphs: [
+        'Pamiętasz: `malloc()` wypożycza skrzynkę z magazynu, `free()` ją oddaje.',
+        'A co, jeśli oddasz tę samą skrzynkę dwa razy? Magazyn wpisze ją do wolnych dwa razy i potem wyda ją dwóm różnym osobom naraz. Chaos.',
+        'To błąd „double free” — prawdziwe programy od tego padają, a hakerzy potrafią go wykorzystać do włamań.',
+        'Zasada: każdy blok pamięci oddajesz dokładnie raz. Nie zero razy (wyciek), nie dwa razy (double free).',
+      ],
+      example: `int *dane = malloc(sizeof(int) * 10);
+free(dane);
+// free(dane);  <- drugi raz = AWARIA`,
+      exampleOutput: `(pamięć oddana raz — wszystko w porządku)`,
+    },
+    solutionWhere: 'Usuń drugie free(bufor); — to pod komentarzem o sprzątaniu. Funkcja ma wyglądać tak:',
+    solutionSnippet: `void przetworz_pakiet() {
+    int *bufor = malloc(sizeof(int) * 64);
+    free(bufor);
+}`,
+    instructions:
+      'Ktoś „na wszelki wypadek” dopisał drugie free(bufor) na końcu funkcji. Teraz serwer pada przy pierwszym pakiecie. Znajdź i usuń nadmiarowe free.',
+    starterCode: `#include <stdio.h>
+#include <stdlib.h>
+
+void przetworz_pakiet() {
+    int *bufor = malloc(sizeof(int) * 64);
+    free(bufor);
+    // sprzatanie na wszelki wypadek
+    free(bufor);
+}
+
+int main() {
+    for (int i = 0; i < 12; i++) {
+        przetworz_pakiet();
+    }
+    printf("Przetworzono 12 pakietow.\\n");
+    return 0;
+}
+`,
+    hints: ['W funkcji są dwa free(bufor); — jedno wystarczy.', 'Usuń ostatnie free(bufor); razem z komentarzem nad nim.'],
+    solution: `#include <stdio.h>
+#include <stdlib.h>
+
+void przetworz_pakiet() {
+    int *bufor = malloc(sizeof(int) * 64);
+    free(bufor);
+}
+
+int main() {
+    for (int i = 0; i < 12; i++) {
+        przetworz_pakiet();
+    }
+    printf("Przetworzono 12 pakietow.\\n");
+    return 0;
+}
+`,
+    memoryLimitBytes: 2048,
+    warningThresholdFraction: 0.6,
+  },
 ]

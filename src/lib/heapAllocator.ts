@@ -9,7 +9,7 @@ import cstdlib from 'JSCPP/lib/includes/cstdlib'
 const originalCstdlibLoad = cstdlib.load
 
 export interface HeapEvent {
-  type: 'alloc' | 'free'
+  type: 'alloc' | 'free' | 'doublefree'
   bytes: number
 }
 
@@ -33,6 +33,8 @@ export interface HeapTracker {
 export function createHeapTracker(): HeapTracker {
   const events: HeapEvent[] = []
   const blockSizes = new WeakMap<object, number>()
+  // Blocks already handed back — a second free() of one is a double free.
+  const freedBlocks = new WeakSet<object>()
 
   const cstdlibOverride = {
     load(rt: CRuntime) {
@@ -58,7 +60,10 @@ export function createHeapTracker(): HeapTracker {
         const bytes = arr ? blockSizes.get(arr) : undefined
         if (bytes != null) {
           blockSizes.delete(arr as object)
+          freedBlocks.add(arr as object)
           events.push({ type: 'free', bytes })
+        } else if (arr && freedBlocks.has(arr)) {
+          events.push({ type: 'doublefree', bytes: 0 })
         }
         return rt2.val(rt2.voidTypeLiteral, 0)
       }

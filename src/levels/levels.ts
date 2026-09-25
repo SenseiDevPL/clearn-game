@@ -328,7 +328,7 @@ int main() {
 ]
 
 // Play order: new topics are slotted where they fit the learning path.
-const PLAY_ORDER = [1, 2, 8, 3, 9, 10, 4, 11, 5, 12, 13, 14, 6, 15, 7]
+const PLAY_ORDER = [1, 2, 8, 3, 9, 10, 4, 11, 17, 5, 12, 16, 13, 18, 14, 19, 6, 15, 7, 20]
 const byId = new Map([...baseLevels, ...moreLevels].map((l) => [l.id, l]))
 
 export const levels: Level[] = PLAY_ORDER.map((id) => byId.get(id)!)

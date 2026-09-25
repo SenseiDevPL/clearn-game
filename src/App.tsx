@@ -239,8 +239,9 @@ export default function App() {
           )}
         </div>
 
-        {lessonOpen ? (
-          <div className="flex-1 overflow-y-auto">
+        <div className="relative flex-1 flex min-h-0">
+        {lessonOpen && (
+          <div className="absolute inset-0 z-10 overflow-y-auto bg-neutral-950">
             <div className="mx-auto max-w-3xl px-6 py-8">
               <div className="text-sm font-semibold uppercase tracking-wide text-sky-300">
                 📖 Lekcja — przeczytaj, zanim zaczniesz
@@ -281,7 +282,10 @@ export default function App() {
               </button>
             </div>
           </div>
-        ) : (
+        )}
+        {/* Work area stays mounted under the lesson: the Phaser machine
+            inside must not be recreated per level, or browsers run out of
+            WebGL contexts and blank the factory hall. */}
         <div className="flex-1 flex min-h-0">
           <div className="flex-1 min-w-0 flex flex-col border-r border-neutral-800">
             <div className="flex-1 min-h-0">
@@ -414,7 +418,7 @@ export default function App() {
             </details>
           </div>
         </div>
-        )}
+        </div>
       </main>
     </div>
   )
