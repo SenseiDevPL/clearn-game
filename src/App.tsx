@@ -8,9 +8,19 @@ import { LevelMachine } from './components/LevelMachine'
 import type { MachineState } from './game/SingleMachineScene'
 import type { HeapEvent } from './lib/heapAllocator'
 
-const PROGRESS_KEY = 'clearn-progress'
-const codeKey = (levelId: number) => `clearn-code-${levelId}`
-const lessonKey = (levelId: number) => `clearn-lesson-${levelId}`
+// v2: code saved before 2026-09-25 could be scrambled by the old editor
+// bug / browser auto-translate, so it is discarded once and never loaded.
+const PROGRESS_KEY = 'clearn-v2-progress'
+const codeKey = (levelId: number) => `clearn-v2-code-${levelId}`
+const lessonKey = (levelId: number) => `clearn-v2-lesson-${levelId}`
+
+try {
+  for (const k of Object.keys(localStorage)) {
+    if (k.startsWith('clearn-') && !k.startsWith('clearn-v2-')) localStorage.removeItem(k)
+  }
+} catch {
+  // storage blocked — nothing old to clean up
+}
 
 function lessonSeen(levelId: number): boolean {
   try {
