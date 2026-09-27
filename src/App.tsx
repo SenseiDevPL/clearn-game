@@ -178,7 +178,7 @@ export default function App() {
     <div className="flex h-screen bg-neutral-950 text-neutral-100">
       <aside className="w-64 shrink-0 border-r border-neutral-800 overflow-y-auto">
         <h1 className="px-4 pt-4 text-lg font-semibold text-neutral-100">
-          clearn <span className="text-emerald-400">C</span>
+          <span className="text-emerald-400">C</span>-Learn Game
         </h1>
         <p className="px-4 pb-3 pt-1 text-sm text-neutral-400">
           Wybierz maszynę do naprawy (poziom). Ukończone: {completed.size} z {levels.length}
