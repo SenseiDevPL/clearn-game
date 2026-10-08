@@ -38,3 +38,43 @@ export function explainCError(raw: string): string {
   }
   return raw
 }
+
+// Messages of the real compiler (xcc), e.g. "/tmp/main.c(4): `;' expected"
+// followed by the offending line and a ^ marker — kept, they help.
+const COMPILE_RULES: [RegExp, string][] = [
+  [/`([^']+)' undeclared/, 'nie znam nazwy „$1” — zmienna nie została utworzona (np. int $1 = ...), literówka albo brakuje #include'],
+  [/`,' or `\)` expected/, 'brakuje przecinka albo nawiasu „)”'],
+  [/`([^']+)' expected/, 'brakuje znaku „$1”'],
+  [/String not closed/, 'tekst nie jest zamknięty — brakuje cudzysłowu "'],
+  [/cannot modify `const'/, 'tej zmiennej (const) nie wolno zmieniać'],
+  [/convert value from type `([^']+)' to `([^']+)'/, 'zły typ — nie da się zamienić $1 na $2'],
+  [/function `(\w+)' expect (\d+) arguments, but (\d+)/, 'funkcja $1 przyjmuje $2 argument(y/ów), a podano $3'],
+]
+
+export function explainCompileError(raw: string): string {
+  return raw
+    .split('\n')
+    .map((line) => {
+      const m = line.match(/^\/tmp\/main\.c\((\d+)\):\s*(.*)$/)
+      if (!m) return line
+      let text = m[2]
+      for (const [re, say] of COMPILE_RULES) {
+        if (re.test(text)) {
+          text = text.replace(new RegExp('.*' + re.source + '.*'), say)
+          break
+        }
+      }
+      return `Linia ${m[1]}: ${text}`
+    })
+    .join('\n')
+    .trim()
+}
+
+/** WebAssembly traps of the real compiler's programs, said plainly. */
+export function explainTrap(raw: string): string {
+  if (/divide by zero|division by zero/i.test(raw)) return 'Dzielenie przez zero — program się wysypał.'
+  if (/out of bounds/i.test(raw)) return 'Program sięgnął poza swoją pamięć i się wysypał.'
+  if (/unreachable/i.test(raw)) return 'Program trafił w miejsce, w które nie powinien — i się wysypał.'
+  return raw
+}
+

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { levels } from './levels/levels'
-import { explainCError } from './lib/explainError'
-import { runCpp } from './lib/runCpp'
+import { explainCError, explainCompileError, explainTrap } from './lib/explainError'
+import { runCpp, runXcc } from './lib/runCpp'
 import { CodeEditor } from './components/CodeEditor'
 import { MemoryVisualizer } from './components/MemoryVisualizer'
 import { FactoryHall } from './components/FactoryHall'
@@ -50,7 +50,7 @@ type RunState =
   | { status: 'running' }
   | { status: 'success'; output: string }
   | { status: 'wrong'; output: string }
-  | { status: 'error'; message: string; explained?: boolean }
+  | { status: 'error'; message: string; explained?: boolean; compile?: boolean }
   | { status: 'timeout' }
   | { status: 'missing'; message: string }
 
@@ -71,6 +71,10 @@ export default function App() {
   const [machineState, setMachineState] = useState<MachineState>({ kind: 'idle' })
   const [editorKey, setEditorKey] = useState(0)
   const level = levels[levelIndex]
+  // Traditional levels run on the real C compiler (xcc in the browser). AI
+  // levels keep the JSCPP simulator: their lesson is the bug it stops and
+  // explains, which real C would hide. Memory levels need its heap tracker.
+  const realCompiler = level.kind === 'output' && !level.ai
   const [lessonOpen, setLessonOpen] = useState(() => !lessonSeen(level.id))
 
   const [code, setCode] = useState(
@@ -127,7 +131,9 @@ export default function App() {
     setMachineState({ kind: 'idle' })
     if (level.kind === 'memory') setHeapEvents(null)
 
-    const result = await runCpp(code, { mode: level.kind === 'memory' ? 'memory' : 'output' })
+    const result = realCompiler
+      ? await runXcc(code)
+      : await runCpp(code, { mode: level.kind === 'memory' ? 'memory' : 'output' })
 
     if (result.timedOut) {
       setRunState({ status: 'timeout' })
@@ -135,8 +141,14 @@ export default function App() {
       return
     }
     if (result.error) {
-      const explained = explainCError(result.error)
-      setRunState({ status: 'error', message: explained, explained: explained !== result.error })
+      if (result.compileError) {
+        setRunState({ status: 'error', message: explainCompileError(result.error), explained: true, compile: true })
+        setMachineState({ kind: 'fault' })
+        return
+      }
+      const raw = result.error.replace(/^TRAP: /, '')
+      const explained = result.error.startsWith('TRAP: ') ? explainTrap(raw) : explainCError(raw)
+      setRunState({ status: 'error', message: explained, explained: explained !== raw })
       setMachineState({ kind: 'fault' })
       return
     }
@@ -229,6 +241,21 @@ export default function App() {
           </div>
           <div className="mt-1 flex items-center gap-3">
             <h2 className="text-xl font-semibold">{level.title}</h2>
+            {realCompiler ? (
+              <span
+                className="rounded-full border border-emerald-700/60 bg-emerald-950/40 px-2.5 py-0.5 text-xs text-emerald-300"
+                title="Twój kod kompiluje prawdziwy kompilator C — działający w całości w tej przeglądarce."
+              >
+                ⚙️ Prawdziwy kompilator C
+              </span>
+            ) : (
+              <span
+                className="rounded-full border border-violet-700/60 bg-violet-950/40 px-2.5 py-0.5 text-xs text-violet-300"
+                title="Ten poziom działa w symulatorze, który zatrzymuje i tłumaczy błędy pamięci — prawdziwe C ukrywa je po cichu."
+              >
+                🔍 Symulator z detektorem błędów
+              </span>
+            )}
             {!lessonOpen && (
               <button
                 onClick={() => setLessonOpen(true)}
@@ -369,8 +396,17 @@ export default function App() {
               <div className="px-4 py-3 border-b border-neutral-800 text-sm">
                 {runState.status === 'error' && runState.explained && (
                   <>
-                    <div className="mb-1 text-red-400 font-medium">Program zatrzymał się na błędzie</div>
-                    <div className="text-neutral-200">{runState.message}</div>
+                    <div className="mb-1 text-red-400 font-medium">
+                      {runState.compile ? 'Błąd kompilacji — program nie został uruchomiony' : 'Program zatrzymał się na błędzie'}
+                    </div>
+                    <div className={runState.compile ? 'whitespace-pre-wrap font-mono text-xs text-neutral-200' : 'text-neutral-200'}>
+                      {runState.message}
+                    </div>
+                    {runState.compile && (
+                      <div className="mt-2 text-xs text-neutral-400">
+                        Kompilator często zauważa brak dopiero w następnej linijce — sprawdź też linijkę wyżej.
+                      </div>
+                    )}
                   </>
                 )}
                 {runState.status === 'error' && !runState.explained && (
