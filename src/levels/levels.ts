@@ -1,5 +1,6 @@
 import type { Level } from '../types'
 import { moreLevels } from './moreLevels'
+import { workLevels } from './workLevels'
 
 const baseLevels: Level[] = [
   {
@@ -328,7 +329,11 @@ int main() {
 ]
 
 // Play order: new topics are slotted where they fit the learning path.
-const PLAY_ORDER = [1, 2, 8, 3, 9, 10, 4, 11, 17, 5, 12, 16, 13, 18, 14, 19, 6, 15, 7, 20]
-const byId = new Map([...baseLevels, ...moreLevels].map((l) => [l.id, l]))
+const PLAY_ORDER = [
+  1, 2, 8, 3, 9, 10, 4, 11, 17, 5, 12, 16, 13, 18, 14, 19, 6, 15, 7, 20,
+  // "C w pracy" (21-30) and "Sprawdź kod od AI" (31-50), in their own order
+  ...workLevels.map((l) => l.id),
+]
+const byId = new Map([...baseLevels, ...moreLevels, ...workLevels].map((l) => [l.id, l]))
 
 export const levels: Level[] = PLAY_ORDER.map((id) => byId.get(id)!)

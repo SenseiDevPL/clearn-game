@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { levels } from './levels/levels'
+import { explainCError } from './lib/explainError'
 import { runCpp } from './lib/runCpp'
 import { CodeEditor } from './components/CodeEditor'
 import { MemoryVisualizer } from './components/MemoryVisualizer'
@@ -13,6 +14,7 @@ import type { HeapEvent } from './lib/heapAllocator'
 const PROGRESS_KEY = 'clearn-v2-progress'
 const codeKey = (levelId: number) => `clearn-v2-code-${levelId}`
 const lessonKey = (levelId: number) => `clearn-v2-lesson-${levelId}`
+const LAST_KEY = 'clearn-v2-last'
 
 try {
   for (const k of Object.keys(localStorage)) {
@@ -48,11 +50,20 @@ type RunState =
   | { status: 'running' }
   | { status: 'success'; output: string }
   | { status: 'wrong'; output: string }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; explained?: boolean }
   | { status: 'timeout' }
+  | { status: 'missing'; message: string }
 
 export default function App() {
-  const [levelIndex, setLevelIndex] = useState(0)
+  // Reopen the level the student was on last time.
+  const [levelIndex, setLevelIndex] = useState(() => {
+    try {
+      const saved = Number(localStorage.getItem(LAST_KEY))
+      return Number.isInteger(saved) && saved >= 0 && saved < levels.length ? saved : 0
+    } catch {
+      return 0
+    }
+  })
   const [completed, setCompleted] = useState<Set<number>>(loadProgress)
   const [runState, setRunState] = useState<RunState>({ status: 'idle' })
   const [heapEvents, setHeapEvents] = useState<HeapEvent[] | null>(null)
@@ -65,6 +76,14 @@ export default function App() {
   const [code, setCode] = useState(
     () => localStorage.getItem(codeKey(level.id)) ?? level.starterCode,
   )
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_KEY, String(levelIndex))
+    } catch {
+      // storage blocked — the game just starts at level 1 next time
+    }
+  }, [levelIndex])
 
   useEffect(() => {
     setCode(localStorage.getItem(codeKey(level.id)) ?? level.starterCode)
@@ -116,7 +135,8 @@ export default function App() {
       return
     }
     if (result.error) {
-      setRunState({ status: 'error', message: result.error })
+      const explained = explainCError(result.error)
+      setRunState({ status: 'error', message: explained, explained: explained !== result.error })
       setMachineState({ kind: 'fault' })
       return
     }
@@ -129,7 +149,10 @@ export default function App() {
     }
 
     const actual = result.output.trim()
-    if (actual === level.expectedOutput) {
+    if (actual === level.expectedOutput && level.mustMatch && !level.mustMatch.pattern.test(code)) {
+      setRunState({ status: 'missing', message: level.mustMatch.message })
+      setMachineState({ kind: 'fault' })
+    } else if (actual === level.expectedOutput) {
       markCompleted()
       setRunState({ status: 'success', output: result.output })
       setMachineState({ kind: 'success' })
@@ -219,6 +242,11 @@ export default function App() {
           <>
           <div className="mt-3 rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3">
             <div className="text-sm font-semibold text-emerald-300">Twoje zadanie</div>
+            {level.ai && (
+              <div className="mt-1 text-sm text-violet-300">
+                🤖 Kod poniżej napisał asystent AI. Uruchom go, znajdź błąd i popraw — tak wygląda praca z AI.
+              </div>
+            )}
             <p className="mt-1 text-base text-neutral-100">{level.instructions}</p>
             {level.kind === 'output' && (
               <div className="mt-2 text-sm text-neutral-300">
@@ -230,9 +258,19 @@ export default function App() {
             )}
           </div>
           <ol className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-neutral-400">
-            <li><b className="text-neutral-200">1.</b> Przeczytaj zadanie</li>
-            <li><b className="text-neutral-200">2.</b> Kliknij w kod poniżej i dopisz swój kod w miejscu „Twój kod tutaj”</li>
-            <li><b className="text-neutral-200">3.</b> Kliknij zielony przycisk „▶ Uruchom kod”</li>
+            {level.ai ? (
+              <>
+                <li><b className="text-neutral-200">1.</b> Uruchom kod od AI i zobacz, co się stanie</li>
+                <li><b className="text-neutral-200">2.</b> Znajdź błąd i popraw go w kodzie poniżej</li>
+                <li><b className="text-neutral-200">3.</b> Uruchom jeszcze raz i sprawdź wynik</li>
+              </>
+            ) : (
+              <>
+                <li><b className="text-neutral-200">1.</b> Przeczytaj zadanie</li>
+                <li><b className="text-neutral-200">2.</b> Kliknij w kod poniżej i dopisz swój kod w miejscu „Twój kod tutaj”</li>
+                <li><b className="text-neutral-200">3.</b> Kliknij zielony przycisk „▶ Uruchom kod”</li>
+              </>
+            )}
             <li>Utknąłeś? Na dole po prawej są podpowiedzi i rozwiązanie.</li>
           </ol>
           </>
@@ -322,9 +360,20 @@ export default function App() {
 
           <div className="w-96 shrink-0 flex flex-col">
             <LevelMachine state={machineState} />
+            {runState.status === 'missing' && (
+              <div className="px-4 py-3 border-b border-neutral-800 text-sm text-amber-300">
+                Wynik się zgadza, ale zadanie było inne: {runState.message}
+              </div>
+            )}
             {(runState.status === 'error' || runState.status === 'timeout') && (
               <div className="px-4 py-3 border-b border-neutral-800 text-sm">
-                {runState.status === 'error' && (
+                {runState.status === 'error' && runState.explained && (
+                  <>
+                    <div className="mb-1 text-red-400 font-medium">Program zatrzymał się na błędzie</div>
+                    <div className="text-neutral-200">{runState.message}</div>
+                  </>
+                )}
+                {runState.status === 'error' && !runState.explained && (
                   <>
                     <div className="mb-1 text-red-400 font-medium">
                       Komputer nie rozumie tego kodu

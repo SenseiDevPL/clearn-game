@@ -15,6 +15,10 @@ interface LevelBase {
   /** Just the lines the player has to add, and where to put them. */
   solutionWhere: string
   solutionSnippet: string
+  /** "Check the AI's code" level: the starter code is an AI's buggy attempt. */
+  ai?: boolean
+  /** Extra requirement the output alone can't prove. */
+  mustMatch?: { pattern: RegExp; message: string }
 }
 
 export interface OutputLevel extends LevelBase {

@@ -177,7 +177,7 @@ export class FactoryScene extends Phaser.Scene {
       const done = this.state.completed.has(level.id)
 
       this.statusEmojis[i]?.setText(done ? '🟢' : '🔴')
-      this.bigEmojis[i]?.setText(done ? '✅' : '🔧')
+      this.bigEmojis[i]?.setText(done ? '✅' : level.ai ? '🤖' : '🔧')
 
       const emitter = this.smokeEmitters[i]
       if (emitter) {
